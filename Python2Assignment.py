@@ -1,0 +1,82 @@
+import pandas as pd              # Importing the pandas package for data manipulation
+import matplotlib.pyplot as plt  # Importing the matplotlib.pyplot module for data visualization
+
+def new_columns(dataframe):
+    """Renames columns to latitude and longitude as they are swapped."""
+    if 'Latitude' in dataframe.columns and 'Longitude' in dataframe.columns:
+        # Create a dictionary to map the current column names to the desired ones
+        renamed_column = {'Longitude': 'latitude', 'Latitude': 'longitude'}
+        # Rename the columns using the mapping dictionary
+        dataframe = dataframe.rename(columns=renamed_column)
+    return dataframe
+
+def filtered_data(dataframe):
+    """Filters the dataframe for valid latitude and longitude values."""
+    # Define bounding box values for the UK
+    min_lon, max_lon = -10.592, 1.6848
+    min_lat, max_lat = 50.681, 57.985
+
+    # Filter the dataframe to include only rows with latitude and longitude within the defined bounds
+    dataframe = dataframe[
+        (dataframe['latitude'] >= min_lat) & (dataframe['latitude'] <= max_lat) &
+        (dataframe['longitude'] >= min_lon) & (dataframe['longitude'] <= max_lon)
+    ]
+    return dataframe
+
+def GrowMap(file_path):
+    """Main function to plot Grow locations on a map of the UK."""
+    try:
+        # Read the CSV data into a pandas dataframe
+        grow_data = pd.read_csv(file_path)
+
+        # Process the data by renaming columns and filtering invalid data
+        grow_data = new_columns(grow_data)
+        grow_data = filtered_data(grow_data)
+
+        # Create a figure with a specified size
+        plt.figure(figsize=(10, 15))                      
+
+        # Read the UK map image from the specified path
+        uk_map = plt.imread('Source_file/map7.png')          
+
+        # Display the UK map as a background image with specified extent
+        plt.imshow(uk_map, extent=[-10.5, 1.8, 50.6, 57.8])
+
+        # Plot the Grow data points on the map with specified properties
+        plt.scatter(grow_data['longitude'], grow_data['latitude'], alpha=0.7, c='blue', marker='^', s=30, edgecolors='black')
+
+        # Set the title of the plot
+        plt.title("Grow Sensor Locations on UK Map")       
+
+        # Set the label for the x-axis
+        plt.xlabel("Longitude")                           
+
+        # Set the label for the y-axis
+        plt.ylabel("Latitude")                             
+
+        # Enable the grid for better readability with specified properties
+        plt.grid(True, linestyle='solid', linewidth=0.5, color='black')
+
+        # Save the figure to a file
+        plt.savefig('GrowDataset.png')                         
+        
+        # Display the plot on screen using the 'with' statement
+        with plt.show():                                       
+            pass
+
+    except FileNotFoundError as e:
+        # Handle the case when the specified file is not found
+        print(f"File not found: {e}")
+    except pd.errors.EmptyDataError:
+        # Handle the case when the CSV file is empty
+        print("The CSV file is empty. Please check the data.")
+    except pd.errors.ParserError:
+        # Handle the case when there is an error parsing the CSV file
+        print("Error parsing the CSV file. Please ensure the data is in the correct format.")
+    except Exception as e:
+        # Handle any unexpected errors
+        print(f"An unexpected error occurred: {e}")
+
+if __name__ == '__main__':                  
+    # Call the main function with the path to the Grow data CSV file
+    GrowMap('Source_file/GrowLocations.csv')   
